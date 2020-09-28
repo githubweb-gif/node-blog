@@ -55,10 +55,11 @@ blog.get('/article/:id', async (req, res) => {
     const id = req.params['id']
     const article = await Article.findOne({ _id: id }).populate([{ path: 'author', select: 'username' },
     { path: 'sorts', select: 'title' }]);
+    console.log(article)
     // 上一条
-    const previous = await Article.find({ _id: { $lt: id } }, { _id: 1, title: 1 }).sort({ _id: -1 }).limit(1)
+    const previous = await Article.find({ createAt: { $lt: article.createAt } }, { _id: 1, title: 1 }).sort({ createAt: -1 }).limit(1)
     // 下一条
-    const next = await Article.find({ _id: { $gt: id } }, { _id: 1, title: 1 }).sort({ _id: 1 }).limit(1)
+    const next = await Article.find({ createAt: { $gt: article.createAt } }, { _id: 1, title: 1 }).sort({ createAt: 1 }).limit(1)
     res.send({ data: { article, previous, next }, code: 200 })
 })
 // 阅读数
@@ -67,7 +68,7 @@ blog.put('/views/:id', async (req, res) => {
     // 阅读数+1
     const article = await Article.updateOne({ _id: id }, { $inc: { 'meta.views': 1 } });
     // 总阅读数+1
-     await Statistics.update({}, { $inc: { ArticleViews: 1 } });
+    await Statistics.update({}, { $inc: { ArticleViews: 1 } });
     res.send({ data: article, code: 200 })
 })
 
