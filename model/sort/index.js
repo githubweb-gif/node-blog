@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const sortShema = new mongoose.Schema({
-    // 小分类
-    title: {
+    // 标签
+    className: {
         type: String,
         maxlength: 30,
         minlength: 2,
@@ -10,23 +10,20 @@ const sortShema = new mongoose.Schema({
         // 唯一性
         unique: true
     },
-    // 大分类
-    className: {
-        type: String,
-        required: true
-    },
     createAt: {
         type: Date,
         default: Date.now
+    },
+    // 分类介绍
+    Introduction: {
+        type: String,
+        maxlength: 60,
+        required: true
     }
+
 });
 
 const Sort = mongoose.model('Sort', sortShema)
-
-// Sort.create({
-//     title: 'ajax',
-//     classNmae: 'JavaScript'
-// })
 
 module.exports = {
     Sort

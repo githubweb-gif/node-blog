@@ -7,7 +7,6 @@ const normal = require('./routes/normal');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 require('./model/connet');
-require('./model/sort/sort');
 const path = require('path');
 
 // 开放静态资源

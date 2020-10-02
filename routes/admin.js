@@ -5,7 +5,8 @@ const formidable = require('formidable');
 const path = require('path');
 const { Article } = require('../model/article/article');
 const pagination = require('mongoose-sex-page');
-const { Sort } = require('../model/sort/sort');
+const { Label } = require('../model/label/label');
+const { Sort } = require('../model/sort/index');
 const { Comment } = require('../model/comment/comment');
 const { Setting } = require('../model/setting/setting');
 const { ToDo } = require('../model/todo/todo');
@@ -35,27 +36,68 @@ admin.get('/allInfo', async (req, res) => {
     })
 })
 
-// 获取文章分类
-admin.get('/sort', require('./sort'))
-// 添加文章分类
+// 添加分类
 admin.post('/sort', (req, res) => {
-    Sort.create(req.body).then((info) => {
+    let { className, Introduction } = req.body
+    console.log(req.body)
+    Sort.create({ className, Introduction }).then((info) => {
+        res.send({ data: info, code: 20000 })
+    }).catch((err) => {
+        console.log(err)
+        res.send({ data: { message: '添加文章分类错误' }, code: 400 })
+    });
+})
+
+// 获取分类
+admin.get('/sort', async (req, res) => {
+    const { nowPage, pages } = req.query
+    const sorts = await pagination(Sort).find().page(nowPage).size(pages).display().exec();
+    res.send({ data: sorts, code: 20000 });
+})
+
+// 修改分类
+admin.put('/sort', (req, res) => {
+    let { id, data } = req.body
+    Sort.updateOne({ _id: id },  data ).then((info) => {
+        res.send({ data: info, code: 20000 })
+    }).catch(() => {
+        res.send({ data: { message: '修改分类错误' }, code: 400 })
+    });
+})
+
+// 刪除分类
+admin.delete('/sort', (req, res) => {
+    let { id } = req.body
+    console.log(id)
+    Sort.deleteOne({ _id: id }).then((info) => {
+        res.send({ data: info, code: 20000 })
+    }).catch(() => {
+        res.send({ data: { message: '刪除分类错误' }, code: 400 })
+    });
+})
+
+// 获取文章标签
+admin.get('/label', require('./label'))
+
+// 添加文章标签
+admin.post('/label', (req, res) => {
+    Label.create(req.body).then((info) => {
         res.send({ data: info, code: 20000 })
     }).catch((err) => {
         res.send({ data: { message: '文章分类错误' }, code: 400 })
     });
 })
-// 修改文章分类
-admin.put('/sort/:id', async (req, res) => {
+// 修改文章标签
+admin.put('/label/:id', async (req, res) => {
     const id = req.params['id'];
     const data = req.body
-    const info = await Sort.update({ _id: id }, data);
+    const info = await Label.update({ _id: id }, data);
     res.send({ data: info, code: 20000 })
 })
-// 删除文章分类
-admin.delete('/sort/:id', async (req, res) => {
+// 删除文章标签
+admin.delete('/label/:id', async (req, res) => {
     const id = req.params['id'];
-    const info = await Sort.deleteOne({ _id: id });
+    const info = await Label.deleteOne({ _id: id });
     res.send({ data: info, code: 20000 })
 })
 // 上传图片
@@ -122,21 +164,24 @@ admin.get('/article', async (req, res) => {
     };
     if (id !== '' || state !== '') {
         let articleInfo = await pagination(Article).find(obj).select('-content', '-cover', '-meta').page(nowPage).size(pages)
-            .display().populate([{ path: 'author', select: 'username' }, { path: 'sorts', select: 'title' }]).exec();
+            .display().populate([{ path: 'author', select: 'username' }, { path: 'sorts', select: 'className' },{ path: 'label', select: 'title' }]).exec();
         res.send({ data: articleInfo, code: 20000 })
     } else {
         let articleInfo = await pagination(Article).find(obj).select('-content', '-cover', '-meta').page(nowPage).size(pages)
-            .display().populate([{ path: 'author', select: 'username' }, { path: 'sorts', select: 'title' }]).exec();
+            .display().populate([{ path: 'author', select: 'username' }, { path: 'sorts', select: 'className' },{ path: 'label', select: 'title' }]).exec();
         res.send({ data: articleInfo, code: 20000 })
     }
 })
 
 // 统计文章分类数据
 admin.get('/articleData', async (req, res) => {
-    let articleData = await Article.find().select(['sorts']).populate([{ path: 'sorts', select: 'title' }]);
+    let articleData = await Article.find().select(['label']).populate([{ path: 'label', select: 'title' }]);
     const arr = [];
+    console.log(articleData)
     for (var i = 0; i < articleData.length; i++) {
-        arr.push(articleData[i].sorts.title)
+        if (articleData[i].label) {
+            arr.push(articleData[i].label.title)
+        }
     };
     const arrData = [];
     arr.forEach((item, index) => {
@@ -281,14 +326,13 @@ admin.delete('/article', async (req, res) => {
 //  修改文章
 admin.put('/article/:id', async (req, res) => {
     const id = req.params['id'];
-    const { content, title, cover, author, state, sorts, createAt } = req.body
     const editInfo = await Article.update({ _id: id }, req.body)
     res.send({ data: editInfo, code: 20000 })
 })
 // 查询文章:id
 admin.get('/article/:id', async (req, res) => {
     const id = req.params['id'];
-    let uInfo = await Article.findOne({ _id: id }).populate([{ path: 'sorts', select: 'title' }]);
+    let uInfo = await Article.findOne({ _id: id }).populate([{ path: 'sorts', select: 'className' },{ path: 'label', select: 'title' }]);
     res.send({ data: uInfo, code: 20000 })
 })
 

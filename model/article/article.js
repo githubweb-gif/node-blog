@@ -41,6 +41,12 @@ const articleShema = new mongoose.Schema({
         ref: 'Sort',
         required: [true, '分类信息不存在']
     },
+    // 所属分类
+    label: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Label',
+        required: [true, '标签信息不存在']
+    },
     meta: {
         // 看过数量
         views: { type: Number, default: 0 },

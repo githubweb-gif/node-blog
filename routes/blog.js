@@ -2,7 +2,7 @@ const express = require('express');
 const blog = express.Router();
 const { User } = require('../model/user/user');
 const { Article } = require('../model/article/article');
-const { Sort } = require('../model/sort/sort');
+const { Label } = require('../model/label/label');
 const pagination = require('mongoose-sex-page');
 const { Statistics } = require('../model/webCount');
 const { Setting } = require('../model/setting/setting');
@@ -18,7 +18,7 @@ blog.get('/article', async (req, res) => {
     } = req.query;
     const article = await pagination(Article).find({ $or: [{ title: { $regex: regexp } }] }).sort({ createAt: -1 }).page(nowPage).size(size).display()
         .populate([{ path: 'author', select: 'username' },
-        { path: 'sorts', select: 'title' }]).exec();
+        { path: 'label', select: 'title' }]).exec();
     function removeTAG(str) {
         // return str.replace(/<[^>]+>/g, "");
         // 返回前言
@@ -54,8 +54,7 @@ blog.get('/hot', async (req, res) => {
 blog.get('/article/:id', async (req, res) => {
     const id = req.params['id']
     const article = await Article.findOne({ _id: id }).populate([{ path: 'author', select: 'username' },
-    { path: 'sorts', select: 'title' }]);
-    console.log(article)
+    { path: 'label', select: 'title' }]);
     // 上一条
     const previous = await Article.find({ createAt: { $lt: article.createAt } }, { _id: 1, title: 1 }).sort({ createAt: -1 }).limit(1)
     // 下一条
@@ -74,8 +73,8 @@ blog.put('/views/:id', async (req, res) => {
 
 // 获取所有分类
 blog.get('/sort', async (req, res) => {
-    const sorts = await Sort.find();
-    res.send({ data: sorts, code: 200 })
+    const label = await Label.find();
+    res.send({ data: label, code: 200 })
 })
 
 // 获取分类文章
@@ -85,9 +84,9 @@ blog.get('/sort/:id', async (req, res) => {
         nowPage = 1,
         size = 6
     } = req.query;
-    const sorts = await pagination(Article).find({ sorts: id }).page(nowPage).size(size).display()
+    const sorts = await pagination(Article).find({ label: id }).page(nowPage).size(size).display()
         .populate([{ path: 'author', select: 'username' },
-        { path: 'sorts', select: 'title' }]).exec();
+        { path: 'label', select: 'title' }]).exec();
     function removeTAG(str) {
         return str.replace(/<[^>]+>/g, "");
     }
