@@ -58,7 +58,7 @@ admin.get('/sort', async (req, res) => {
 // 修改分类
 admin.put('/sort', (req, res) => {
     let { id, data } = req.body
-    Sort.updateOne({ _id: id },  data ).then((info) => {
+    Sort.updateOne({ _id: id }, data).then((info) => {
         res.send({ data: info, code: 20000 })
     }).catch(() => {
         res.send({ data: { message: '修改分类错误' }, code: 400 })
@@ -148,12 +148,17 @@ admin.post('/article', (req, res) => {
 })
 // 查询文章
 admin.get('/article', async (req, res) => {
-    const { nowPage, pages, id, state } = JSON.parse(req.query.page);
+    const { nowPage, pages, sortId, labelId, state } = JSON.parse(req.query.page);
+    console.log(JSON.parse(req.query.page))
     const { _id, role } = req.query;
     var obj = {};
-    if (id !== '') {
-        var idd = mongoose.Types.ObjectId(id);
+    if (sortId !== '' && sortId) {
+        var idd = mongoose.Types.ObjectId(sortId);
         obj.sorts = idd
+    };
+    if (labelId !== '' && labelId) {
+        var idd = mongoose.Types.ObjectId(labelId);
+        obj.label = idd
     };
     if (state !== '') {
         obj.state = state - 0;
@@ -162,15 +167,10 @@ admin.get('/article', async (req, res) => {
         var idd1 = mongoose.Types.ObjectId(_id);
         obj.author = idd1;
     };
-    if (id !== '' || state !== '') {
-        let articleInfo = await pagination(Article).find(obj).select('-content', '-cover', '-meta').page(nowPage).size(pages)
-            .display().populate([{ path: 'author', select: 'username' }, { path: 'sorts', select: 'className' },{ path: 'label', select: 'title' }]).exec();
-        res.send({ data: articleInfo, code: 20000 })
-    } else {
-        let articleInfo = await pagination(Article).find(obj).select('-content', '-cover', '-meta').page(nowPage).size(pages)
-            .display().populate([{ path: 'author', select: 'username' }, { path: 'sorts', select: 'className' },{ path: 'label', select: 'title' }]).exec();
-        res.send({ data: articleInfo, code: 20000 })
-    }
+    console.log(obj)
+    let articleInfo = await pagination(Article).find(obj).select('-content', '-cover', '-meta').page(nowPage).size(pages)
+        .display().populate([{ path: 'author', select: 'username' }, { path: 'sorts', select: 'className' }, { path: 'label', select: 'title' }]).exec();
+    res.send({ data: articleInfo, code: 20000 })
 })
 
 // 统计文章分类数据
@@ -263,7 +263,7 @@ admin.get('/articleDay', async (req, res) => {
     date.setHours(0, 0, 0, 0);
     date1.setDate(d);
     let articleData = await Article.find({ createAt: { $gt: date, $lte: date1 } })
-        .select(['sorts', 'createAt', 'state']).populate([{ path: 'sorts', select: 'title' }]);
+        .select(['label', 'createAt', 'state']).populate([{ path: 'label', select: 'title' }]);
     let data = [];
     var kk = [];
     articleData.forEach((item, index) => {
@@ -271,12 +271,12 @@ admin.get('/articleDay', async (req, res) => {
         copyarr[0] = item;
         for (var i = 0; i < articleData.length; i++) {
             if (articleData[i] !== 0) {
-                if (copyarr[0] !== 0 && copyarr[0].sorts.title === articleData[i].sorts.title) {
+                if (copyarr[0] !== 0 && copyarr[0].label.title === articleData[i].label.title) {
                     var obj = {
                         name: '',
                         createAt: ''
                     };
-                    obj.name = item.sorts.title;
+                    obj.name = item.label.title;
                     obj.createAt = articleData[i].createAt;
                     data.push(obj);
                     articleData[i] = 0;
@@ -312,8 +312,8 @@ admin.get('/articleSon', async (req, res) => {
     date.setHours(0, 0, 0, 0);
     date1.setDate(d);
     let articleData = await Article.find({ createAt: { $gt: date, $lte: date1 } })
-        .select(['sorts', 'createAt', 'title', 'author'])
-        .populate([{ path: 'author', select: 'username' }, { path: 'sorts', select: 'title' }]);
+        .select(['label', 'sorts', 'createAt', 'title', 'author'])
+        .populate([{ path: 'author', select: 'username' }, { path: 'label', select: 'title' }, { path: 'sorts', select: 'className' }]);
     res.send({ data: articleData, code: 20000 })
 })
 
@@ -332,7 +332,7 @@ admin.put('/article/:id', async (req, res) => {
 // 查询文章:id
 admin.get('/article/:id', async (req, res) => {
     const id = req.params['id'];
-    let uInfo = await Article.findOne({ _id: id }).populate([{ path: 'sorts', select: 'className' },{ path: 'label', select: 'title' }]);
+    let uInfo = await Article.findOne({ _id: id }).populate([{ path: 'sorts', select: 'className' }, { path: 'label', select: 'title' }]);
     res.send({ data: uInfo, code: 20000 })
 })
 
