@@ -2,10 +2,6 @@
 博客后台接口
 使用的技术 node.js 数据库 mongodb
 
-<a href="https://github.com/githubweb-gif/blog.git">博客前端项目</a>
-
-<a href="https://github.com/githubweb-gif/blog-manage.git">博客后台管理项目<a>
-
 1 下载项目后先下载项目所需要的包
 npm install 
 
